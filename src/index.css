@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #0f172a; /* Default dark bg if React doesn't load immediately */
+}
+
+/* Tailwind base/components/utilities are usually imported in main.jsx or App.jsx for Vite/React */
+/* Ensure your Tailwind setup correctly injects these */
+
+/* Hide default cursor when custom cursor is active (typically on non-touch/desktop) */
+/* The CustomCursor component uses md:block, so this CSS targets general scenarios */
+/* You might need more specific selectors if CustomCursor's visibility logic changes */
+.app-container,
+.app-container *:not(input):not(textarea):not(select) {
+  /* Apply to container and its children, but allow text selection cursors on inputs/textareas */
+  @media (hover: hover) and (pointer: fine) {
+    cursor: none;
+  }
+}
+
+/* Ensure inputs and textareas still show text cursor */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+textarea {
+   @media (hover: hover) and (pointer: fine) {
+    cursor: text; /* Or `auto` if you prefer default text cursor */
+  }
+}
+
+/* Ensure interactive elements still hint at interactivity if default cursor is hidden */
+/* This is somewhat redundant if CustomCursor changes on hover, but good as a fallback */
+a[href]:hover,
+button:hover,
+[role="button"]:hover,
+select:hover {
+  /* If you want a specific system cursor hint when custom is active and an element is interactive */
+  /* cursor: pointer; */ 
+}
