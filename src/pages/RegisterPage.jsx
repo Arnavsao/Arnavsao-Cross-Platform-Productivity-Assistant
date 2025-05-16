@@ -23,8 +23,6 @@ const RegisterPage = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    // This effect runs when authError or registrationAttempted changes.
-    // If a registration was attempted and there is NO error, it means success.
     if (registrationAttempted && !authError) {
       setName('');
       setEmail('');
@@ -34,8 +32,6 @@ const RegisterPage = () => {
         navigate('/login');
       }, 2000); // Delay for user to see success message
     }
-    // If there was an error, this effect does nothing, the error is displayed by the UI.
-    // Reset registrationAttempted after checking, so this effect only runs once per attempt effectively
     if (registrationAttempted) {
         setRegistrationAttempted(false);
     }
@@ -48,8 +44,6 @@ const RegisterPage = () => {
     setRegistrationAttempted(true); // Signal that a registration attempt has been made
   };
 
-  // Determine if registration was successful based on error state AFTER an attempt
-  // This is for displaying the success message specifically.
   const isSuccess = !authError && registrationAttempted;
 
   return (

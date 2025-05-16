@@ -15,6 +15,13 @@ import {
   setUserFocusTimeOfDay,
   selectCurrentUserFocus
 } from '../redux/chatSlice';
+import {
+  fetchVideoRecommendations,
+  selectVideoRecommendations,
+  selectVideoIsLoading,
+  selectVideoError
+} from '../redux/videoSlice';
+import VideoPreview from '../components/VideoPreview';
 
 const ChatPage = () => {
   const dispatch = useDispatch();
@@ -24,6 +31,9 @@ const ChatPage = () => {
   const isChatReplyLoading = useSelector(selectIsAIChatLoading);
   const chatError = useSelector(selectChatError);
   const currentFocus = useSelector(selectCurrentUserFocus);
+  const videoRecommendations = useSelector(selectVideoRecommendations);
+  const isVideoLoading = useSelector(selectVideoIsLoading);
+  const videoError = useSelector(selectVideoError);
   
   const [newMessage, setNewMessage] = useState('');
   const [localTimeOfDay, setLocalTimeOfDay] = useState(currentFocus.timeOfDay || '');
@@ -74,14 +84,19 @@ const ChatPage = () => {
       userId: currentUser.id,
       message: { text: newMessage, sender: 'user', type: 'chat' }
     };
-    dispatch(addMessage(userMessagePayload)); // Add user's message immediately
+    dispatch(addMessage(userMessagePayload));
     
-    // Then, fetch AI response
+    // Check if the message is asking for video recommendations
+    const videoRequestRegex = /(?:show|find|recommend|suggest).*?(?:video|youtube|tutorial)/i;
+    if (videoRequestRegex.test(newMessage)) {
+      dispatch(fetchVideoRecommendations({ query: newMessage }));
+    }
+    
     dispatch(fetchOpenAIChatResponse({
       userId: currentUser.id,
-      messagesHistory: [...messages, userMessagePayload.message], // Include the just-sent user message for context
+      messagesHistory: [...messages, userMessagePayload.message],
       newMessageText: newMessage,
-      currentUserFocus: currentFocus // Pass current focus for context
+      currentUserFocus: currentFocus
     }));
 
     setNewMessage('');
@@ -147,6 +162,7 @@ const ChatPage = () => {
 
           <div className="flex-grow flex flex-col bg-slate-700/50 rounded-lg shadow-inner overflow-hidden">
             {chatError && <p className='text-red-400 text-sm text-center p-2 bg-red-900/30 rounded-t-lg shrink-0'>Error: {typeof chatError === 'string' ? chatError : JSON.stringify(chatError)}</p>}
+            {videoError && <p className='text-red-400 text-sm text-center p-2 bg-red-900/30 rounded-t-lg shrink-0'>Video Error: {videoError}</p>}
 
             <div className="flex-grow p-3 sm:p-4 space-y-3 overflow-y-auto">
               {messages.length === 0 && !isSuggestionLoading && !isChatReplyLoading && (
@@ -172,7 +188,21 @@ const ChatPage = () => {
                   </div>
                 </div>
               ))}
+              
+              {/* Video Recommendations Section */}
+              {videoRecommendations.length > 0 && (
+                <div className="mt-4 space-y-4">
+                  <h3 className="text-lg font-semibold text-sky-400">Recommended Videos</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {videoRecommendations.map((video) => (
+                      <VideoPreview key={video.id} video={video} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
               {isChatReplyLoading && <p className='text-slate-400 text-sm text-center animate-pulse'>Zenith is thinking...</p>}
+              {isVideoLoading && <p className='text-slate-400 text-sm text-center animate-pulse'>Searching for videos...</p>}
               <div ref={messagesEndRef} />
             </div>
 

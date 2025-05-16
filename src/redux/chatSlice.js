@@ -1,23 +1,23 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import OpenAI from 'openai';
 
-// Initialize OpenAI client
-// IMPORTANT: Replace with your actual key retrieval method, ideally from a secure backend proxy in production.
-// For local development with Vite, ensure VITE_OPENAI_API_KEY is in your .env.local file.
 const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+//Initializes the OpenAI client if the API key is found
 let openai;
 if (apiKey) {
   openai = new OpenAI({ apiKey: apiKey, dangerouslyAllowBrowser: true });
 } else {
   console.error('OpenAI API key not found. Please set VITE_OPENAI_API_KEY in your .env.local file.');
-  // You might want to handle this more gracefully, e.g., by disabling AI features
 }
 
-// Async thunk for fetching initial suggestions
+//Creates an async thunk to call OpenAI 
 export const fetchOpenAISuggestion = createAsyncThunk(
   'chat/fetchOpenAISuggestion',
+  //rejectWithValue lets you pass a custom error message to the reducer.
   async ({ userId, mode, mood, timeOfDay }, { rejectWithValue }) => {
     if (!openai) return rejectWithValue('OpenAI client not initialized.');
+    
+    //	Builds a custom prompt for GPT with the user’s mode, mood, and timeOfDay.
     const prompt = `You are Zenith Mode, a helpful productivity assistant. The user is about to start a session.
     Mode: ${mode}
     Mood: ${mood}
@@ -46,21 +46,27 @@ export const fetchOpenAISuggestion = createAsyncThunk(
   }
 );
 
-// Async thunk for fetching chat responses
+//Creates an async thunk to call OpenAI 
+//Fetches AI response to the user’s message in the chat.
 export const fetchOpenAIChatResponse = createAsyncThunk(
   'chat/fetchOpenAIChatResponse',
   async ({ userId, messagesHistory, newMessageText, currentUserFocus }, { rejectWithValue }) => {
     if (!openai) return rejectWithValue('OpenAI client not initialized.');
+
     // Construct a simplified history for the prompt
     const simplifiedHistory = messagesHistory
+    //Uses the last 6 messages to keep the context concise.
       .slice(-6) // Take last 6 messages to keep prompt length reasonable
       .map(msg => `${msg.sender === 'user' ? 'User' : (msg.sender === 'ai_suggestion' ? 'Zenith (Suggestion)' : 'Zenith')}: ${msg.text}`)
       .join('\n');
 
+    //Adds the current focus context to the prompt
     const focusContext = currentUserFocus.mode ? `Current Focus: Mode - ${currentUserFocus.mode}, Mood - ${currentUserFocus.mood}, Time - ${currentUserFocus.timeOfDay}.\n` : '';
 
+    //Builds the final prompt for GPT
     const prompt = `${focusContext}Chat History:\n${simplifiedHistory}\nUser: ${newMessageText}\nZenith:`;
     
+
     try {
       const completion = await openai.chat.completions.create({
         model: "gpt-3.5-turbo",
@@ -79,8 +85,9 @@ export const fetchOpenAIChatResponse = createAsyncThunk(
   }
 );
 
+//Initializes the chat slice with the following state properties:
 const initialState = {
-  // chatsByUser: { 'userId1': [{id, text, sender, timestamp}], 'userId2': [] }
+
   chatsByUser: {},
   currentMessages: [], // Messages for the currently active user in ChatPage
   isLoading: false,
@@ -93,23 +100,23 @@ const initialState = {
     mood: null, // 'Happy', 'Stressed', 'Tired', 'Energetic'
     timeOfDay: '', // Can be manually entered string or auto-detected
   },
-  // We can incorporate the initial suggestion into the messages array with a special type/sender
 };
 
+
+//Creates the chat slice with the following reducers:
 const chatSlice = createSlice({
   name: 'chat',
   initialState,
   reducers: {
+    //Loads messages for a specific user
     loadMessagesForUser: (state, action) => {
       const { userId } = action.payload;
       state.currentMessages = state.chatsByUser[userId] || [];
-      // Reset focus for the user when loading their messages, or load persisted focus if stored per user
-      // For now, let's keep currentUserFocus global to the session, or clear it.
-      // If you want focus per user, it should be nested under chatsByUser or a separate structure.
       state.currentUserFocus = initialState.currentUserFocus; // Reset focus when loading/switching user
       state.isLoading = false; 
       state.error = null; // Clear error when loading messages
     },
+    //Adds a new message to the chat history
     addMessage: (state, action) => {
       const { userId, message } = action.payload; // message: { text, sender, type (e.g. 'chat' or 'suggestion') }
       if (!state.chatsByUser[userId]) {

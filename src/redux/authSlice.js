@@ -1,17 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-// IMPORTANT SECURITY WARNING:
-// Storing passwords, even "hashed" in this simplified way, directly in client-side Redux 
-// is NOT secure for real applications. This is for demonstration purposes only 
-// as per the request to use Redux as a temporary client-side data store.
-// In a real application, authentication must be handled by a secure backend.
-
 const initialState = {
-  users: [], // Array to store registered users: { id, name, email, password (plain for demo - VERY INSECURE) }
+  users: [], // store registered users: { id, name, email, password (plain for demo - VERY INSECURE) }
   currentUser: null, // { id, name, email }
   isAuthenticated: false,
   error: null,
-  // No token needed if we purely rely on Redux state for auth status in this client-only demo
 };
 
 const authSlice = createSlice({
@@ -19,8 +12,8 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     registerUser: (state, action) => {
-      const { name, email, password } = action.payload;
-      const existingUser = state.users.find(user => user.email === email);
+      const { name, email, password } = action.payload; //Extracts user data from the dispatched action
+      const existingUser = state.users.find(user => user.email === email); //Checks if a user with the same email already exists
       if (existingUser) {
         state.error = 'User with this email already exists.';
       } else {
@@ -32,11 +25,10 @@ const authSlice = createSlice({
         };
         state.users.push(newUser);
         state.error = null; // Clear error on successful registration
-        // Optionally, log in the user directly after registration by setting currentUser and isAuthenticated
-        // state.currentUser = { id: newUser.id, name: newUser.name, email: newUser.email };
-        // state.isAuthenticated = true;
+
       }
     },
+    //matches the user's email and password to the users array
     loginUser: (state, action) => {
       const { email, password } = action.payload;
       const user = state.users.find(u => u.email === email && u.password === password);

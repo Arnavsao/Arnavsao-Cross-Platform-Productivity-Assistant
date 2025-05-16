@@ -13,13 +13,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: #0f172a; /* Default dark bg if React doesn't load immediately */
 }
-
-/* Tailwind base/components/utilities are usually imported in main.jsx or App.jsx for Vite/React */
-/* Ensure your Tailwind setup correctly injects these */
-
-/* Hide default cursor when custom cursor is active (typically on non-touch/desktop) */
-/* The CustomCursor component uses md:block, so this CSS targets general scenarios */
-/* You might need more specific selectors if CustomCursor's visibility logic changes */
 .app-container,
 .app-container *:not(input):not(textarea):not(select) {
   /* Apply to container and its children, but allow text selection cursors on inputs/textareas */
@@ -28,7 +21,6 @@ body {
   }
 }
 
-/* Ensure inputs and textareas still show text cursor */
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -41,12 +33,9 @@ textarea {
   }
 }
 
-/* Ensure interactive elements still hint at interactivity if default cursor is hidden */
-/* This is somewhat redundant if CustomCursor changes on hover, but good as a fallback */
 a[href]:hover,
 button:hover,
 [role="button"]:hover,
 select:hover {
-  /* If you want a specific system cursor hint when custom is active and an element is interactive */
-  /* cursor: pointer; */ 
+
 }
