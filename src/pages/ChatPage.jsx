@@ -91,8 +91,11 @@ const ChatPage = () => {
     if (videoRequestRegex.test(newMessage)) {
       dispatch(fetchVideoRecommendations({ 
         query: newMessage,
-        messagesHistory: messages,
-        currentFocus: currentFocus
+        context: {
+          mode: currentFocus.mode,
+          mood: currentFocus.mood,
+          timeOfDay: currentFocus.timeOfDay
+        }
       }));
     }
     
