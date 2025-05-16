@@ -5,10 +5,31 @@ const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
 // Async thunk for fetching video recommendations
 export const fetchVideoRecommendations = createAsyncThunk(
   'video/fetchRecommendations',
-  async ({ query, maxResults = 3 }, { rejectWithValue }) => {
+  async ({ query, messagesHistory = [], currentFocus }, { rejectWithValue }) => {
     try {
+      // Build a more contextual search query
+      let searchQuery = query;
+      
+      // Add focus context if available
+      if (currentFocus?.mode) {
+        searchQuery += ` ${currentFocus.mode}`;
+      }
+      
+      // Add relevant context from recent messages
+      const recentMessages = messagesHistory.slice(-3); // Get last 3 messages
+      const contextKeywords = recentMessages
+        .map(msg => msg.text)
+        .join(' ')
+        .split(/\s+/)
+        .filter(word => word.length > 3) // Filter out short words
+        .slice(0, 3); // Take top 3 keywords
+      
+      if (contextKeywords.length > 0) {
+        searchQuery += ` ${contextKeywords.join(' ')}`;
+      }
+
       const response = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=${maxResults}&q=${encodeURIComponent(query)}&type=video&key=${YOUTUBE_API_KEY}`
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=3&q=${encodeURIComponent(searchQuery)}&type=video&key=${YOUTUBE_API_KEY}&videoEmbeddable=true&videoSyndicated=true`
       );
       
       if (!response.ok) {
@@ -20,7 +41,7 @@ export const fetchVideoRecommendations = createAsyncThunk(
         id: item.id.videoId,
         title: item.snippet.title,
         description: item.snippet.description,
-        thumbnailUrl: item.snippet.thumbnails.medium.url,
+        thumbnailUrl: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
         channelTitle: item.snippet.channelTitle,
         publishedAt: item.snippet.publishedAt
       }));

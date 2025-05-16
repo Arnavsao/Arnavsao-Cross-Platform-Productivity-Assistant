@@ -89,7 +89,11 @@ const ChatPage = () => {
     // Check if the message is asking for video recommendations
     const videoRequestRegex = /(?:show|find|recommend|suggest).*?(?:video|youtube|tutorial)/i;
     if (videoRequestRegex.test(newMessage)) {
-      dispatch(fetchVideoRecommendations({ query: newMessage }));
+      dispatch(fetchVideoRecommendations({ 
+        query: newMessage,
+        messagesHistory: messages,
+        currentFocus: currentFocus
+      }));
     }
     
     dispatch(fetchOpenAIChatResponse({
